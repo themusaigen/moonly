@@ -17,7 +17,7 @@ ffi.cdef([[
 ]])
 
 -- Moonly version
-local _VERSION = 0.13
+local _VERSION = 0.14
 
 -- Config
 local autoreload_delay = 1000
@@ -109,7 +109,7 @@ package.cpath = "<root>\\<lib>\\?.dll;" .. package.cpath
 -- Spoof getWorkingDirectory
 local getWorkingDirectory_ = env.getWorkingDirectory
 env.getWorkingDirectory = function()
-  return "<root>\\<src>"
+  return "<root>"
 end
 
 env.getMoonloaderDirectory = function()
