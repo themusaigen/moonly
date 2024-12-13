@@ -17,7 +17,7 @@ ffi.cdef([[
 ]])
 
 -- Moonly version
-local _VERSION = 0.14
+local _VERSION = 0.15
 
 -- Config
 local autoreload_delay = 1000
@@ -101,6 +101,23 @@ local package = env.package
 -- Spoof it.
 for _, value in ipairs(paths) do
   package.path = value .. package.path
+end
+
+-- FFI patch. (mimgui fix)
+local ffi = require("ffi")
+local orig_load = ffi.load
+
+ffi.load = function(name)
+  local ok, mod = pcall(orig_load, name)
+  if ok then
+    return mod
+  elseif type(name) == "string" then
+    -- Redirect path if it our error. 
+    local found = string.find(name, getWorkingDirectory())
+    if found then
+      return orig_load(string.gsub(name, getWorkingDirectory(), getMoonloaderDirectory()))
+    end
+  end
 end
 
 -- Spoof package.cpath
