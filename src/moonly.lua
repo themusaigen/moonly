@@ -17,7 +17,7 @@ ffi.cdef([[
 ]])
 
 -- Moonly version
-local _VERSION = 0.15
+local _VERSION = 0.2
 
 -- Config
 local autoreload_delay = 1000
@@ -202,22 +202,40 @@ local function lookup_for_project(dir)
   return json
 end
 
-local function scan_dir(dir)
-  local projects = {}
+local function process_lfs(dir, iterator, recursive)
+  for file in lfs.dir(dir) do
+    if (file ~= ".") and (file ~= "..") then
+      iterator(dir, file)
 
-  local function process_lfs(dir, iterator, recursive)
-    for file in lfs.dir(dir) do
-      if (file ~= ".") and (file ~= "..") then
-        iterator(dir, file)
-
-        local path = ("%s\\%s"):format(dir, file)
-        local attributes = lfs.attributes(path)
-        if attributes and recursive and attributes.mode == "directory" then
-          process_lfs(path, iterator, true)
-        end
+      local path = ("%s\\%s"):format(dir, file)
+      local attributes = lfs.attributes(path)
+      if attributes and recursive and attributes.mode == "directory" then
+        process_lfs(path, iterator, true)
       end
     end
   end
+end
+
+local function update_information_about_modify_time(project)
+  process_lfs(project.source_path, function(dir, file)
+    if file:match(".lua$") then
+      local file_path = ("%s\\%s"):format(dir, file)
+
+      -- Check for duplicates.
+      for _, value in ipairs(project.files) do
+        if value.path == file_path then
+          return
+        end
+      end
+      
+      -- Update info.
+      project.files[#project.files + 1] = { path = file_path, modify_time = get_file_modify_time(file_path) }
+    end
+  end, true)
+end
+
+local function scan_dir(dir)
+  local projects = {}
 
   process_lfs(dir, function(_, file)
     local project_path = ("%s\\%s"):format(dir, file)
@@ -238,12 +256,8 @@ local function scan_dir(dir)
         project.source_path = ("%s\\%s"):format(project.root, project.source)
         project.path = ("%s\\init.lua"):format(project.source_path)
 
-        process_lfs(project.source_path, function(dir, file)
-          if file:match(".lua$") then
-            local file_path = ("%s\\%s"):format(dir, file)
-            project.files[#project.files + 1] = { path = file_path, modify_time = get_file_modify_time(file_path) }
-          end
-        end, true)
+        -- Update AutoReboot info.
+        update_information_about_modify_time(project)
 
         -- Add new project.
         projects[#projects + 1] = project
@@ -281,10 +295,13 @@ function main()
               project.script:unload()
             end
 
+            -- Reload project.
             load_project(project)
+            update_information_about_modify_time(project)
 
+            -- Update modify time to prevent infinity reloadings.
             file.modify_time = modify_time
-            break
+            break            
           end
         end
       end
