@@ -17,7 +17,7 @@ ffi.cdef([[
 ]])
 
 -- Moonly version
-local _VERSION = 0.2
+local _VERSION = 0.21
 
 -- Config
 local autoreload_delay = 1000
@@ -112,7 +112,7 @@ ffi.load = function(name)
   if ok then
     return mod
   elseif type(name) == "string" then
-    -- Redirect path if it our error. 
+    -- Redirect path if it our error.
     local found = string.find(name, getWorkingDirectory())
     if found then
       return orig_load(string.gsub(name, getWorkingDirectory(), getMoonloaderDirectory()))
@@ -227,7 +227,7 @@ local function update_information_about_modify_time(project)
           return
         end
       end
-      
+
       -- Update info.
       project.files[#project.files + 1] = { path = file_path, modify_time = get_file_modify_time(file_path) }
     end
@@ -291,17 +291,15 @@ function main()
         if modify_time then
           if (modify_time[1] ~= file.modify_time[1]) or (modify_time[2] ~= file.modify_time[2]) then
             if project.script then
-              -- `reload` method is doing nothing?
-              project.script:unload()
+              project.script:reload()
             end
 
-            -- Reload project.
-            load_project(project)
+            -- Update information about new files, etc...
             update_information_about_modify_time(project)
 
             -- Update modify time to prevent infinity reloadings.
             file.modify_time = modify_time
-            break            
+            break
           end
         end
       end
