@@ -17,7 +17,7 @@ ffi.cdef([[
 ]])
 
 -- Moonly version
-local _VERSION = 0.21
+local _VERSION = 0.22
 
 -- Config
 local autoreload_delay = 1000
@@ -116,7 +116,11 @@ ffi.load = function(name)
     local found = string.find(name, getWorkingDirectory())
     if found then
       return orig_load(string.gsub(name, getWorkingDirectory(), getMoonloaderDirectory()))
+    else
+      error(mod)
     end
+  else
+    error(mod)
   end
 end
 
@@ -269,6 +273,27 @@ local function scan_dir(dir)
   return projects
 end
 
+local function reboot_project(project)
+  --[[
+    We are using the `unload` function because of problems with the `reload` function.
+    When trying to restart the script by editing a non-root project file (src/init.lua), nothing happens.
+  ]]
+  if project.script then
+    project.script:unload()
+
+    -- Wait till script deads. This fixes some errors like "The command has already been registered"
+    while not project.script.dead do
+      wait(0) 
+    end
+  end
+
+  -- Load project.
+  load_project(project)
+
+  -- Update information about new files, etc...
+  update_information_about_modify_time(project)
+end
+
 local projects
 function main()
   -- Create directory if don't exist
@@ -285,21 +310,23 @@ function main()
     wait(autoreload_delay)
 
     for _, project in ipairs(projects) do
-      -- Script present.
+      local project_reloaded = false
+
+      -- Iterate through all files.
       for _, file in ipairs(project.files) do
         local modify_time = get_file_modify_time(file.path)
         if modify_time then
           if (modify_time[1] ~= file.modify_time[1]) or (modify_time[2] ~= file.modify_time[2]) then
-            if project.script then
-              project.script:reload()
-            end
+            if not project_reloaded then
+              -- We are reloading projects in a separate thread.
+              lua_thread.create(reboot_project, project)
 
-            -- Update information about new files, etc...
-            update_information_about_modify_time(project)
+              -- Mark as reloaded.
+              project_reloaded = true
+            end
 
             -- Update modify time to prevent infinity reloadings.
             file.modify_time = modify_time
-            break
           end
         end
       end
