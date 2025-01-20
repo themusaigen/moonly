@@ -17,7 +17,7 @@ ffi.cdef([[
 ]])
 
 -- Moonly version
-local _VERSION = 0.22
+local _VERSION = 0.3
 
 -- Config
 local autoreload_delay = 1000
@@ -220,8 +220,8 @@ local function process_lfs(dir, iterator, recursive)
   end
 end
 
-local function update_information_about_modify_time(project)
-  process_lfs(project.source_path, function(dir, file)
+local function update_information_about_modify_time(dir, project)
+  process_lfs(dir, function(dir, file)
     if file:match(".lua$") then
       local file_path = ("%s\\%s"):format(dir, file)
 
@@ -258,10 +258,12 @@ local function scan_dir(dir)
         project.library = project.library or "lib"
         project.root = project_path:gsub("%.", getGameDirectory())
         project.source_path = ("%s\\%s"):format(project.root, project.source)
+        project.library_path = ("%s\\%s"):format(project.root, project.library)
         project.path = ("%s\\init.lua"):format(project.source_path)
 
         -- Update AutoReboot info.
-        update_information_about_modify_time(project)
+        update_information_about_modify_time(project.source_path, project)
+        update_information_about_modify_time(project.library_path, project)
 
         -- Add new project.
         projects[#projects + 1] = project
@@ -291,7 +293,8 @@ local function reboot_project(project)
   load_project(project)
 
   -- Update information about new files, etc...
-  update_information_about_modify_time(project)
+  update_information_about_modify_time(project.source_path, project)
+  update_information_about_modify_time(project.library_path, project)
 end
 
 local projects
