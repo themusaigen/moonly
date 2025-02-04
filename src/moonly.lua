@@ -17,7 +17,7 @@ ffi.cdef([[
 ]])
 
 -- Moonly version
-local _VERSION = 0.3
+local _VERSION = 0.4
 
 -- Config
 local autoreload_delay = 1000
@@ -193,12 +193,12 @@ end
 local function lookup_for_project(dir)
   local path = dir .. "/" .. "project.json"
   if not doesFileExist(path) then
-    return false, "don't exist"
+    return nil
   end
 
   local file = io.open(path, "r")
   if not file then
-    return false, "io.open failed"
+    return nil
   end
 
   local json = decodeJson(file:read("*a"))
@@ -238,6 +238,30 @@ local function update_information_about_modify_time(dir, project)
   end, true)
 end
 
+local function initialize_project(project_path)
+  local project = lookup_for_project(project_path)
+  if project then
+    -- Index name of the project
+    project.name = project.name or project_path:match("+[\\/](%S+)$")
+
+    -- Index the project path to use later.
+    project.files = {}
+    project.source = project.source or "src"
+    project.library = project.library or "lib"
+    project.root = project_path:gsub("%.", getGameDirectory())
+    project.source_path = ("%s\\%s"):format(project.root, project.source)
+    project.library_path = ("%s\\%s"):format(project.root, project.library)
+    project.path = ("%s\\init.lua"):format(project.source_path)
+
+    -- Update AutoReboot info.
+    update_information_about_modify_time(project.source_path, project)
+    update_information_about_modify_time(project.library_path, project)
+
+    -- Add new project.
+    return project
+  end
+end
+
 local function scan_dir(dir)
   local projects = {}
 
@@ -247,28 +271,9 @@ local function scan_dir(dir)
     -- Check for attributes.
     local attributes = lfs.attributes(project_path)
     if attributes and attributes.mode == "directory" then
-      local project, err = lookup_for_project(project_path)
+      local project = initialize_project(project_path)
       if project then
-        -- Index name of the project
-        project.name = project.name or file
-
-        -- Index the project path to use later.
-        project.files = {}
-        project.source = project.source or "src"
-        project.library = project.library or "lib"
-        project.root = project_path:gsub("%.", getGameDirectory())
-        project.source_path = ("%s\\%s"):format(project.root, project.source)
-        project.library_path = ("%s\\%s"):format(project.root, project.library)
-        project.path = ("%s\\init.lua"):format(project.source_path)
-
-        -- Update AutoReboot info.
-        update_information_about_modify_time(project.source_path, project)
-        update_information_about_modify_time(project.library_path, project)
-
-        -- Add new project.
         projects[#projects + 1] = project
-      else
-        output("bad project %s, got error %s", file, err)
       end
     end
   end)
@@ -285,7 +290,7 @@ local function reboot_project(project)
 
     -- Wait till script deads. This fixes some errors like "The command has already been registered"
     while not project.script.dead do
-      wait(0) 
+      wait(0)
     end
   end
 
@@ -297,13 +302,75 @@ local function reboot_project(project)
   update_information_about_modify_time(project.library_path, project)
 end
 
-local projects
+local function load_external_projects(external)
+  local projects = {}
+
+  for _, path in ipairs(external) do
+    local project = initialize_project(path)
+    if project then
+      projects[#projects + 1] = project
+    else
+      for _, value in ipairs(scan_dir(path)) do
+        projects[#projects + 1] = value
+      end
+    end
+  end
+  return projects
+end
+
+local function dump_default_configuration(path)
+  local json = {
+    projects = {
+      external = {}
+    }
+  }
+
+  local file = io.open(path, "w+")
+  if file then
+    file:write(encodeJson(json))
+    file:close()
+  else
+    output("can't create %s", path)
+  end
+end
+
+local function parse_json_configuration()
+  local configuration_path = string.format("%s//moonly.json", getWorkingDirectory())
+  if not doesFileExist(configuration_path) then
+    return dump_default_configuration(configuration_path)
+  end
+
+  local configuration = io.open(configuration_path, "r")
+  if configuration then
+    local json = decodeJson(configuration:read("*a"))
+    configuration:close()
+    return json
+  else
+    output("can't read moonly.json")
+  end
+end
+
+local projects = {}
 function main()
+  -- Parse our configuration.
+  local configuration = parse_json_configuration()
+  if configuration then
+    local external = configuration.projects.external
+    if external then
+      for _, project in ipairs(load_external_projects(external)) do
+        projects[#projects + 1] = project
+      end
+    end
+  end
+
   -- Create directory if don't exist
   create_moonly_directory()
 
   -- Scan for all projects.
-  projects = scan_dir(".\\moonly")
+  local core_projects = scan_dir(".\\moonly")
+  for _, project in ipairs(core_projects) do
+    projects[#projects + 1] = project
+  end
 
   -- Load projects.
   load_projects(projects)
