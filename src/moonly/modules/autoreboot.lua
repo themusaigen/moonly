@@ -74,25 +74,27 @@ end
 ---@param project table # Project object
 ---@param dir string # Directory to scan
 function autoreboot:update_info_about_directory_files(project, dir)
-  path.traverse(dir, function(base_path, entry)
-    if entry:match("%.lua$") then
-      local full_path = path.concat(base_path, entry)
+  path.traverse(dir, function(base_path, entry, isdirectory)
+    if isdirectory then
+      return
+    end
 
-      -- Skip if already tracked
-      for _, file in ipairs(self.projects[project]) do
-        if file.path == full_path then
-          return
-        end
-      end
+    local full_path = path.concat(base_path, entry)
 
-      -- Add new file info
-      local modify_time = get_file_modify_time(full_path)
-      if modify_time then
-        table.insert(self.projects[project], {
-          path = full_path,
-          modify_time = modify_time
-        })
+    -- Skip if already tracked
+    for _, file in ipairs(self.projects[project]) do
+      if file.path == full_path then
+        return
       end
+    end
+
+    -- Add new file info
+    local modify_time = get_file_modify_time(full_path)
+    if modify_time then
+      table.insert(self.projects[project], {
+        path = full_path,
+        modify_time = modify_time
+      })
     end
   end, true)
 end

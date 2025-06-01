@@ -52,11 +52,7 @@ function configurator:load()
       return nil
     end
 
-    config = utility.read_json(config_path)
-    if not config then
-      logger:error("Failed to read newly created configuration file.")
-      return nil
-    end
+    return default_config
   else
     logger:debug("Loaded configuration from %s", config_path)
   end
