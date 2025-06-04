@@ -2,95 +2,101 @@
 -- Purpose: Generates and writes temporary Lua scripts for project bootstrapping.
 -- Author: Musaigen
 
-local scriptgenerator = {}
+local M = {}
 
 -- Require external modules
 require("moonly.string")
 local path = require("moonly.path")
-local utility = require("moonly.utility")
 local logger = require("moonly.logger")
 
 --- Generates the source code template for a temporary Moonloader script.
 ---@param project table # Project object with metadata and paths
 ---@return string # Generated Lua script content
-function scriptgenerator:generate_source_code(project)
-  local root_dir = project:root_directory():gsub("\\", "\\\\") -- Escape backslashes
+function M:generate_source_code(project)
+  local init_path = project:init_script_path():gsub("\\", "\\\\") -- Escape backslashes
+  local root_dir = project:root_directory():gsub("\\", "\\\\")    -- Escape backslashes
 
   local source_template = [[
-do
-  -- Prepare paths for mixinning them into package.path and package.cpath
-  local paths = {
-    "<root>\\<src>\\?.lua;",
-    "<root>\\<src>\\?\\init.lua;",
-    "<root>\\<src>\\?.luac;",
-    "<root>\\<src>\\?\\init.luac;",
-    "<root>\\<lib>\\?.lua;",
-    "<root>\\<lib>\\?\\init.lua;",
-    "<root>\\<lib>\\?.luac;",
-    "<root>\\<lib>\\?\\init.luac;"
-  }
+local script = loadfile("<path>")
+if not script then
+  print("failed to load source code of <path>")
+  return
+end
 
-  -- Mixin package.cpath
-  package.cpath = "<root>\\<lib>\\?.dll;" .. package.cpath
+-- Get the environment of this script.
+local env = getfenv(script)
 
-  -- Mixin package.path
-  for _, value in ipairs(paths) do
-    package.path = value .. package.path
-  end
+-- Get the `package` lib of script.
+local package = env.package
 
-  -- Patching ffi.load (for mimgui and other libraries using FFI)
-  local ffi = require("ffi")
-  local load = ffi.load
-  ffi.load = function(libname)
-    local success, library = pcall(load, libname)
-    if success then
-      return library
-    elseif type(libname) == "string" then
-      local found = string.find(libname, getWorkingDirectory())
-      if found then
-        return load(string.gsub(libname, getWorkingDirectory(), getMoonloaderDirectory()))
-      else
-        error(library)
-      end
+-- Prepare paths for mixinning them into package.path and package.cpath
+local paths = {
+  "<root>\\<src>\\?.lua;",
+  "<root>\\<src>\\?\\init.lua;",
+  "<root>\\<src>\\?.luac;",
+  "<root>\\<src>\\?\\init.luac;",
+  "<root>\\<lib>\\?.lua;",
+  "<root>\\<lib>\\?\\init.lua;",
+  "<root>\\<lib>\\?.luac;",
+  "<root>\\<lib>\\?\\init.luac;"
+}
+
+-- Mixin package.cpath
+package.cpath = "<root>\\<lib>\\?.dll;" .. package.cpath
+
+-- Mixin package.path
+for _, value in ipairs(paths) do
+  package.path = value .. package.path
+end
+
+-- Patching ffi.load (for mimgui and other libraries using FFI)
+local ffi = require("ffi")
+local load = ffi.load
+ffi.load = function(libname)
+  local success, library = pcall(load, libname)
+  if success then
+    return library
+  elseif type(libname) == "string" then
+    local found = string.find(libname, getWorkingDirectory())
+    if found then
+      return load(string.gsub(libname, getWorkingDirectory(), getMoonloaderDirectory()))
     else
       error(library)
     end
+  else
+    error(library)
   end
-
-  -- Patch getWorkingDirectory to return the project root
-  local original_getWorkingDirectory = getWorkingDirectory
-  getWorkingDirectory = function()
-    return "<root>"
-  end
-
-  -- Inject new method `getMoonloaderDirectory`
-  getMoonloaderDirectory = function()
-    return original_getWorkingDirectory()
-  end
-
-  -- Define global constants for environment detection
-  MOONLY_ENVIRONMENT = true
-  MOONLY_VERSION = <version>
 end
 
-<init>
+-- Patch getWorkingDirectory to return the project root
+local original_getWorkingDirectory = env.getWorkingDirectory
+getWorkingDirectory = function()
+  return "<root>"
+end
+
+-- Inject new method `getMoonloaderDirectory`
+env.getMoonloaderDirectory = function()
+  return original_getWorkingDirectory()
+end
+
+-- Define global constants for environment detection
+env.MOONLY_ENVIRONMENT = true
+env.MOONLY_VERSION = <version>
+
+-- Set new environment.
+setfenv(script, env)
+
+-- Execute script
+script()
 ]]
 
   -- Replace placeholders with real values
   source_template = source_template
+      :gsub("<path>", init_path)
       :gsub("<root>", root_dir)
       :gsub("<src>", project:source_directory_name())
       :gsub("<lib>", project:libraries_directory_name())
       :gsub("<version>", script.this.version_num)
-
-  -- Insert init script content
-  local init_script_content = utility.read_file(project:init_script_path())
-  if not init_script_content then
-    logger:error("Failed to read init script from %s", project:init_script_path())
-    return ""
-  end
-
-  source_template = source_template:gsub("<init>", init_script_content)
 
   return source_template
 end
@@ -98,7 +104,7 @@ end
 --- Generates a temporary script file and returns its path.
 ---@param project table # Project object with metadata and paths
 ---@return string|nil # Path to the generated script file, or nil on failure
-function scriptgenerator:generate_scriptfile(project)
+function M:generate_scriptfile(project)
   -- Format temporary file path
   local temp_dir = path.get_moonly_temp_directory()
   local filename = string.concat(project:name(), ".lua")
@@ -127,4 +133,4 @@ function scriptgenerator:generate_scriptfile(project)
   return scriptpath
 end
 
-return scriptgenerator
+return M

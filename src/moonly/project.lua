@@ -1,9 +1,8 @@
 -- project.lua
 -- Purpose: Represents a project with configuration and directory structure.
 -- Author: Musaigen
--- License: MIT or similar (adjust as needed)
 
-local Project = {}
+local M       = {}
 
 local path    = require("moonly.path")
 local utility = require("moonly.utility")
@@ -11,7 +10,7 @@ local utility = require("moonly.utility")
 --- Creates a new Project instance based on a directory containing a 'project.json'.
 --- @param directory string # Path to the project root directory
 --- @return table|nil # New project object or nil if loading failed
-function Project.new(directory)
+function M.new(directory)
   local project_file_path = path.concat(directory, "project.json")
   local project_config = utility.read_json(project_file_path)
 
@@ -34,7 +33,7 @@ function Project.new(directory)
     _source_dir        = "",
     _libraries_dir     = "",
     _init_path         = "",
-  }, { __index = Project })
+  }, { __index = M })
 
   -- Post-initialization setup
   self._source_dir        = path.concat(self._root_directory, self._source_dirname)
@@ -46,50 +45,50 @@ end
 
 --- Returns the name of the project.
 ---@return string
-function Project:name()
+function M:name()
   return self._name
 end
 
 --- Returns the name of the source directory (e.g., "src").
 ---@return string
-function Project:source_directory_name()
+function M:source_directory_name()
   return self._source_dirname
 end
 
 --- Returns the name of the libraries directory (e.g., "lib").
 ---@return string
-function Project:libraries_directory_name()
+function M:libraries_directory_name()
   return self._libraries_dirname
 end
 
 --- Returns the absolute path to the project root directory.
 ---@return string
-function Project:root_directory()
+function M:root_directory()
   return self._root_directory
 end
 
 --- Returns the full path to the source directory.
 --- @return string
-function Project:source_directory()
+function M:source_directory()
   return self._source_dir
 end
 
 --- Returns the full path to the libraries directory.
 ---@return string
-function Project:libraries_directory()
+function M:libraries_directory()
   return self._libraries_dir
 end
 
 --- Returns the full path to the init script file (e.g., "src/init.lua").
 ---@return string
-function Project:init_script_path()
+function M:init_script_path()
   return self._init_path
 end
 
 --- Returns the associated script object if it was assigned.
 ---@return table|nil
-function Project:script()
+function M:script()
   return self._script
 end
 
-return Project
+return M

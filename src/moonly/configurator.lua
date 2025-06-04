@@ -2,16 +2,16 @@
 -- Purpose: Manages configuration loading and defaults for the Moonly framework.
 -- Author: Musaigen
 
-local configurator = {}
+local M       = {}
 
-local path         = require("moonly.path")
-local utility      = require("moonly.utility")
-local logger       = require("moonly.logger")
+local path    = require("moonly.path")
+local utility = require("moonly.utility")
+local logger  = require("moonly.logger")
 
 --- Returns a default configuration structure.
 ---This is used if no configuration file exists.
 ---@return table # A default configuration table
-function configurator:get_default_configuration()
+function M:get_default_configuration()
   return {
     runtime = {
       path = {
@@ -32,13 +32,13 @@ end
 
 --- Returns the full path to the configuration file (`moonly.json`).
 ---@return string config_path # Full path to the configuration file
-function configurator:get_configuration_file_path()
+function M:get_configuration_file_path()
   return path.concat(getWorkingDirectory(), "moonly.json")
 end
 
 --- Loads the configuration from disk, or creates a new one if it doesn't exist.
 ---@return table|nil # Loaded configuration table or nil on error
-function configurator:load()
+function M:load()
   local config_path = self:get_configuration_file_path()
 
   -- Try to read existing configuration
@@ -60,4 +60,4 @@ function configurator:load()
   return config
 end
 
-return configurator
+return M

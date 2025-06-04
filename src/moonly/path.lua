@@ -2,15 +2,15 @@
 -- Purpose: Utility module for working with file and directory paths.
 -- Author: Musaigen
 
-local path = {}
+local M = {}
 
 local lfs = require("lfs")
 
 --- Returns the default temporary directory used by Moonly.
 --- Creates it if it doesn't exist.
 ---@return string # Path to the Moonly temporary directory
-function path.get_moonly_temp_directory()
-  local moonly_temp_dir = path.concat(os.getenv("TEMP"), "moonly")
+function M.get_moonly_temp_directory()
+  local moonly_temp_dir = M.concat(os.getenv("TEMP"), "moonly")
 
   if not doesDirectoryExist(moonly_temp_dir) then
     createDirectory(moonly_temp_dir)
@@ -23,7 +23,7 @@ end
 ---@param dir string # Directory to traverse
 ---@param callback fun(base_path: string, entry: string, isdirectory: boolean) # Function to call on each entry
 ---@param recursive boolean|nil # Whether to recurse into subdirectories
-function path.traverse(dir, callback, recursive)
+function M.traverse(dir, callback, recursive)
   if type(callback) ~= "function" then
     error("Callback must be a function")
   end
@@ -34,7 +34,7 @@ function path.traverse(dir, callback, recursive)
       return
     end
 
-    local full_path = path.concat(dir, entry_name)
+    local full_path = M.concat(dir, entry_name)
     local attributes = lfs.attributes(full_path)
 
     if not attributes then
@@ -44,7 +44,7 @@ function path.traverse(dir, callback, recursive)
     callback(dir, entry_name, attributes.mode == "directory")
 
     if recursive and attributes.mode == "directory" then
-      path.traverse(full_path, callback, true)
+      M.traverse(full_path, callback, true)
     end
   end
 
@@ -57,7 +57,7 @@ end
 --- Concatenates multiple path segments using backslashes (`\`).
 ---@param ... string # One or more path components
 ---@return string # The joined path
-function path.concat(...)
+function M.concat(...)
   return table.concat({ ... }, "\\")
 end
 
@@ -65,8 +65,8 @@ end
 --- For example, `C:/folder/file.txt` ? `file.txt`
 ---@param input string # Full path
 ---@return string|nil # Last component of the path, or nil if invalid
-function path.get_last_entry_name(input)
+function M.get_last_entry_name(input)
   return input:match("[\\/]([^\\/]+)$")
 end
 
-return path
+return M

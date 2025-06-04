@@ -82,7 +82,7 @@ function autoreboot:update_info_about_directory_files(project, dir)
     local full_path = path.concat(base_path, entry)
 
     -- Skip if already tracked
-    for _, file in ipairs(self.projects[project]) do
+    for _, file in ipairs(self.projects[project].files) do
       if file.path == full_path then
         return
       end
@@ -91,7 +91,7 @@ function autoreboot:update_info_about_directory_files(project, dir)
     -- Add new file info
     local modify_time = get_file_modify_time(full_path)
     if modify_time then
-      table.insert(self.projects[project], {
+      table.insert(self.projects[project].files, {
         path = full_path,
         modify_time = modify_time
       })
@@ -102,26 +102,26 @@ end
 --- Registers a project with this autoreboot module.
 ---@param project table # Project object
 function autoreboot:register(project)
-  self.projects[project] = {}
+  self.projects[project:name()] = { project = project, files = {} }
 
-  self:update_info_about_directory_files(project, project:source_directory())
-  self:update_info_about_directory_files(project, project:libraries_directory())
+  self:update_info_about_directory_files(project:name(), project:source_directory())
+  self:update_info_about_directory_files(project:name(), project:libraries_directory())
 end
 
 --- Unregisters a project from being tracked.
 ---@param project table # Project object
 function autoreboot:unregister(project)
-  self.projects[project] = nil
+  -- self.projects[project] = nil
 end
 
 --- Main tick function that checks for file changes and reboots project if needed.
 function autoreboot:tick()
   wait(self.delay)
 
-  for project, files in pairs(self.projects) do
+  for name, entry in pairs(self.projects) do
     local needs_reload = false
 
-    for _, file in ipairs(files) do
+    for _, file in ipairs(entry.files) do
       local current_time = get_file_modify_time(file.path)
       if current_time then
         if current_time.low ~= file.modify_time.low or current_time.high ~= file.modify_time.high then
@@ -134,13 +134,13 @@ function autoreboot:tick()
     end
 
     if needs_reload then
-      logger:info("Detected changes in project '%s'. Rebooting...", project:name())
+      logger:info("Detected changes in project '%s'. Rebooting...", name)
 
-      bootstrap:reboot_project(project)
+      bootstrap:reboot_project(entry.project)
 
       -- Scan for new files.
-      self:update_info_about_directory_files(project, project:source_directory())
-      self:update_info_about_directory_files(project, project:libraries_directory())
+      self:update_info_about_directory_files(name, entry.project:source_directory())
+      self:update_info_about_directory_files(name, entry.project:libraries_directory())
     end
   end
 end

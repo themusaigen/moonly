@@ -1,12 +1,14 @@
 script_name("moonly")
-script_version("1.1.0")
-script_version_number(1.10)
+script_version("1.2.0")
+script_version_number(1.20)
 script_author("Musaigen")
 
 -- Load required modules
 local configurator = require("moonly.configurator")
 local bootstrap    = require("moonly.bootstrap")
 local logger       = require("moonly.logger")
+
+local is_unloading = false
 
 --- Main entry point of the script
 function main()
@@ -18,7 +20,6 @@ function main()
 
   if config then
     logger:debug("Configuration loaded successfully.")
-    logger:info("Initializing project system...")
     bootstrap:initialize(config)
   else
     logger:error("Failed to load configuration file 'moonly.json'")
@@ -27,25 +28,37 @@ function main()
   end
 
   -- Keep script running in background
-  wait(-1)
+  while true do
+    wait(0)
+
+    bootstrap:tick()
+  end
+end
+
+local function unload()
+  if not is_unloading then
+    is_unloading = true
+    logger:info("Starting shutting down moonly...")
+    bootstrap:unload()
+    logger:info("Moonly shutdown complete.")
+    logger:close()
+  end
 end
 
 --- Event handler for when a script terminates
 addEventHandler("onScriptTerminate", function(scr)
   if scr == script.this then
-    -- If this script is terminating, clean up resources
-    logger:info("Shutting down moonly...")
-    bootstrap:unload()
-    logger:close()
+    unload()
   else
     -- Check if the terminated script belongs to a registered project
     local project = bootstrap:find_project_by_script(scr)
     if project then
-      logger:info(string.format(
-        "Script '%s' belongs to a project. Unregistering...",
-        scr.name
-      ))
+      logger:info("Script belongs to a project. Unregistering...")
       bootstrap:emit("unregister", project)
     end
   end
+end)
+
+addEventHandler("onQuitGame", function()
+  unload()
 end)

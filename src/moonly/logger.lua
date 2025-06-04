@@ -2,7 +2,7 @@
 -- Purpose: Simple logging module with file output and log levels.
 -- Author: Musaigen
 
-local logger = {
+local M = {
   _file = nil,
 }
 
@@ -12,13 +12,13 @@ local path = require("moonly.path")
 ---@param level string # Log level (DEBUG/INFO/WARN/ERROR)
 ---@param fmt string # Format string
 ---@param ... any # Arguments for format string
-function logger:entry(level, fmt, ...)
+function M:entry(level, fmt, ...)
   -- Open file if not already open
   if not self._file then
     local log_file_path = path.concat(getWorkingDirectory(), "moonly.log")
     self._file = io.open(log_file_path, "w+")
     if not self._file then
-      return       -- Cannot log if file cannot be opened
+      return -- Cannot log if file cannot be opened
     end
   end
 
@@ -35,9 +35,12 @@ function logger:entry(level, fmt, ...)
     message = fmt
   end
 
+  -- Get milliseconds
+  local _, milliseconds = math.modf(os.clock())
+
   -- Format log line
   local timestamp = os.date("%Y-%m-%d %H:%M:%S")
-  local log_line = string.format("[%s] [%s]: %s\n", level, timestamp, message)
+  local log_line = string.format("[%s] [%s:%d]: %s\n", level, timestamp, milliseconds * 1000, message)
 
   -- Write and flush
   self._file:write(log_line)
@@ -47,37 +50,39 @@ end
 --- Logs a debug message.
 ---@param fmt string # Message format string
 ---@param ... any # Values to insert into format string
-function logger:debug(fmt, ...)
+function M:debug(fmt, ...)
   self:entry("DEBUG", fmt, ...)
 end
 
 --- Logs an informational message.
 ---@param fmt string # Message format string
 ---@param ... any # Values to insert into format string
-function logger:info(fmt, ...)
+function M:info(fmt, ...)
   self:entry("INFO", fmt, ...)
 end
 
 --- Logs a warning message.
 ---@param fmt string # Message format string
 ---@param ... any # Values to insert into format string
-function logger:warn(fmt, ...)
+function M:warn(fmt, ...)
   self:entry("WARN", fmt, ...)
 end
 
 --- Logs an error message.
 ---@param fmt string # Message format string
 ---@param ... any # Values to insert into format string
-function logger:error(fmt, ...)
+function M:error(fmt, ...)
   self:entry("ERROR", fmt, ...)
 end
 
 --- Closes the log file.
-function logger:close()
+function M:close()
   if self._file then
+    self:info("Shutdowning Moonly`s logger.")
+
     self._file:close()
     self._file = nil
   end
 end
 
-return logger
+return M
