@@ -57,9 +57,15 @@ ffi.load = function(libname)
   if success then
     return library
   elseif type(libname) == "string" then
-    local found = string.find(libname, getWorkingDirectory())
-    if found then
-      return load(string.gsub(libname, getWorkingDirectory(), getMoonloaderDirectory()))
+	-- Escape slashes if needeed.
+	local cwd = getWorkingDirectory():gsub("/", "\\")
+	local path = libname:gsub("/", "\\")
+	
+	-- Check if string starts with project root.
+    if path:sub(1, #cwd) == cwd then
+	  -- Replace it with new directory.
+	  local new_path = getMoonloaderDirectory() .. "\\" .. path:sub(#cwd + 1)
+      return load(new_path)
     else
       error(library)
     end
