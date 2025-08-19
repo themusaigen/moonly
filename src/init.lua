@@ -1,7 +1,8 @@
 script_name("moonly")
-script_version("1.2.1")
-script_version_number(1.21)
+script_version("1.2.2")
+script_version_number(1.22)
 script_author("Musaigen")
+script_properties("work-in-pause")
 
 -- Load required modules
 local configurator = require("moonly.configurator")
@@ -10,30 +11,29 @@ local logger       = require("moonly.logger")
 
 local is_unloading = false
 
---- Main entry point of the script
-function main()
-  -- Log script start
-  logger:info("Starting moonly v" .. script.this.version)
+-- Log script start
+logger:info("Starting moonly v" .. script.this.version)
 
-  -- Load configuration from file
-  local config = configurator:load()
+-- Load configuration from file
+local config = configurator:load()
 
-  if config then
-    logger:debug("Configuration loaded successfully.")
-    bootstrap:initialize(config)
-  else
-    logger:error("Failed to load configuration file 'moonly.json'")
-    logger:error("Please check file permissions or ensure the file exists.")
-    return
-  end
+if config then
+  logger:debug("Configuration loaded successfully.")
+  bootstrap:initialize(config)
+else
+  logger:error("Failed to load configuration file 'moonly.json'")
+  logger:error("Please check file permissions or ensure the file exists.")
+  return
+end
 
+lua_thread.create(function()
   -- Keep script running in background
   while true do
     wait(0)
 
     bootstrap:tick()
   end
-end
+end)
 
 local function unload()
   if not is_unloading then
