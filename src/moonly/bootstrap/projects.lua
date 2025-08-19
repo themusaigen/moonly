@@ -11,9 +11,12 @@ local action_type     = require("moonly.bootstrap.action_type")
 ---@param project table # Project object
 function M:load_project(project)
   if not project then
-    logger:warn("Trying to load invalid project")
+    logger:error("Attempted to load invalid project")
     return
   end
+
+  -- Logging.
+  logger:system("Loading project '%s' ('%s')...", project:name(), project:root_directory())
 
   -- This method will unload project if it is loaded.
   self:unload_project(project)
@@ -21,12 +24,15 @@ function M:load_project(project)
   -- Generate mixin scriptfile.
   local scriptfile = scriptgenerator:generate_scriptfile(project)
   if not scriptfile then
-    logger:error("Failed to generate script file for project '%s'", project:name())
+    logger:error("Failed to load project '%s', got error while generating temporary script.", project:name())
     return
   end
 
   -- Load project.
   project._script = script.load(scriptfile)
+
+  -- Log :)
+  logger:system("Project '%s': Loaded succesfully.", project:name())
 
   -- Tell the modules about newbie.
   self:emit("register", project)
@@ -36,7 +42,7 @@ end
 ---@param project table # Project object
 function M:unload_project(project)
   if not project then
-    logger:warn("attempt to unload invalid project")
+    logger:error("Attempted to unload invalid project")
     return
   end
 
@@ -53,7 +59,7 @@ end
 ---@param project table # Project object
 function M:reboot_project(project)
   if not project then
-    logger:warn("Attempted to reboot invalid project")
+    logger:error("Attempted to reboot invalid project")
     return
   end
 
@@ -72,7 +78,7 @@ end
 
 --- Scans configured runtime paths for projects and loads them.
 function M:_initialize_projects()
-  logger:info("Initializing projects...")
+  logger:system("Initializing projects...")
 
   for _, directory in ipairs(self:configuration_runtime_path()) do
     if not doesDirectoryExist(directory) then
@@ -89,7 +95,6 @@ end
 function M:_lookup_for_project_in_directory(directory)
   local project = Project.new(directory)
   if project then
-    logger:info("Initialized project '%s'", project:name())
     self:load_project(project)
     table.insert(self._projects, project)
     return true

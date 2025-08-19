@@ -4,24 +4,48 @@ local logger = require("moonly.logger")
 
 --- Initializes core and user-defined modules.
 function M._initialize_modules(self)
-  logger:info("Initializing modules...")
+  logger:system("Initializing modules...")
 
-  for _, mod in ipairs(self:configuration_modules()) do
-    local module_name = mod.core and string.concat("moonly.modules.", mod.name) or mod.name
-    local module = require(module_name)
-
-    if module.initialize then
-      module:initialize(mod.options or {})
-    end
-
-    self._modules[#self._modules + 1] = module
-    logger:info("Module '%s' initialized", mod.name)
+  for _, modname in ipairs(self:configuration_modules()) do
+    self:load_module(modname)
   end
+end
+
+--- Loads specific module
+---@param modname string
+function M:load_module(modname)
+  logger:system("Loading module '%s'...", modname)
+
+  -- Checking is we trying to load kernel module.
+  local success, module = pcall(require, string.concat("moonly.modules.", modname))
+
+  -- Not kernel, just require it.
+  if not success then
+    success, module = pcall(require, modname)
+    if not success then
+      local errmsg = string.format("Failed to load '%s' module, error: %s", modname, module)
+
+      -- Got an error!
+      logger:error(errmsg)
+      error(errmsg)
+    end
+  end
+
+  -- Call initialize callback if exists.
+  if module.initialize then
+    module:initialize(self._configuration)
+  end
+
+  -- Record this module and log.
+  self._modules[#self._modules + 1] = module
+
+  -- Log.
+  logger:system("Module '%s': Loaded succesfully.", modname)
 end
 
 --- Creates background threads for modules that have a tick function.
 function M._initialize_module_threads(self)
-  logger:info("Initializing module threads...")
+  logger:system("Initializing module threads...")
 
   for _, module in ipairs(self:modules()) do
     if type(module.tick) == "function" then

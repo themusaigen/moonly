@@ -22,10 +22,10 @@ function M:tick()
 
     if project._script.dead then
       if action.type == action_type.UNLOAD then
-        logger:debug("Unloading project '%s'", project:name())
+        logger:system("Unloading project '%s'", project:name())
         project._script = nil
       else
-        logger:debug("Rebooting project '%s'", project:name())
+        logger:system("Rebooting project '%s'", project:name())
         self:load_project(project)
       end
 

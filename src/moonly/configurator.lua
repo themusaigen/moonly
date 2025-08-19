@@ -13,20 +13,13 @@ local logger  = require("moonly.logger")
 ---@return table # A default configuration table
 function M:get_default_configuration()
   return {
-    runtime = {
-      path = {
-        path.concat(getGameDirectory(), "moonly")
-      }
+    ["moonly.runtime.path"] = {
+      path.concat(getGameDirectory(), "moonly")
     },
-    modules = {
-      {
-        name = "autoreboot",
-        core = true,
-        options = {
-          delay = 1000
-        }
-      }
-    }
+    ["moonly.runtime.modules"] = {
+      "autoreboot"
+    },
+    ["moonly.autoreboot.delay"] = 1000,
   }
 end
 
@@ -54,7 +47,16 @@ function M:load()
 
     return default_config
   else
-    logger:debug("Loaded configuration from %s", config_path)
+    logger:info("Configuration path: %s", config_path)
+
+    -- Checking for using deprecated configuration.
+    if config["runtime"] then
+      local errmsg =
+      "You are using deprecated configuration format. Please, delete current 'moonly.json' and let the moonly to create default configuration."
+
+      logger:error(errmsg)
+      error(errmsg)
+    end
   end
 
   return config

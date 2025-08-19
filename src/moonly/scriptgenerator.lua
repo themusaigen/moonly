@@ -57,14 +57,14 @@ ffi.load = function(libname)
   if success then
     return library
   elseif type(libname) == "string" then
-	-- Escape slashes if needeed.
-	local cwd = getWorkingDirectory():gsub("/", "\\")
-	local path = libname:gsub("/", "\\")
-	
-	-- Check if string starts with project root.
+    -- Escape slashes if needeed.
+    local cwd = getWorkingDirectory():gsub("/", "\\")
+    local path = libname:gsub("/", "\\")
+
+	  -- Check if string starts with project root.
     if path:sub(1, #cwd) == cwd then
-	  -- Replace it with new directory.
-	  local new_path = getMoonloaderDirectory() .. "\\" .. path:sub(#cwd + 1)
+      -- Replace it with new directory.
+      local new_path = getMoonloaderDirectory() .. "\\" .. path:sub(#cwd + 1)
       return load(new_path)
     else
       error(library)
@@ -119,14 +119,12 @@ function M:generate_scriptfile(project)
   -- Open file for writing
   local file = io.open(scriptpath, "w+")
   if not file then
-    logger:error("Cannot create temporary script file at %s", scriptpath)
     return nil
   end
 
   -- Write generated source code
   local source = self:generate_source_code(project)
   if source == "" then
-    logger:error("Failed to generate source code for %s", project:name())
     file:close()
     os.remove(scriptpath)
     return nil
@@ -134,8 +132,6 @@ function M:generate_scriptfile(project)
 
   file:write(source)
   file:close()
-
-  logger:debug("Generated temporary script at %s", scriptpath)
   return scriptpath
 end
 

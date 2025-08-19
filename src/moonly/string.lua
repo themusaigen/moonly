@@ -11,7 +11,6 @@ function string.concat(...)
   -- Optional: validate that all arguments are strings
   for i, v in ipairs(args) do
     if type(v) ~= "string" then
-      logger:warn("string.concat -> argument %d is not a string (type: %s)", i, type(v))
       return ""
     end
   end

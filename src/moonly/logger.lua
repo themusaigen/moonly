@@ -9,7 +9,7 @@ local M = {
 local path = require("moonly.path")
 
 --- Internal function to write a log entry to the file.
----@param level string # Log level (DEBUG/INFO/WARN/ERROR)
+---@param level string? # Log level (DEBUG/INFO/WARN/ERROR)
 ---@param fmt string # Format string
 ---@param ... any # Arguments for format string
 function M:entry(level, fmt, ...)
@@ -40,11 +40,31 @@ function M:entry(level, fmt, ...)
 
   -- Format log line
   local timestamp = os.date("%Y-%m-%d %H:%M:%S")
-  local log_line = string.format("[%s] [%s:%d]: %s\n", level, timestamp, milliseconds * 1000, message)
+  local log_line
+  if level then
+    log_line = string.format("[%s] [%s:%d]: %s\n", level, timestamp, milliseconds * 1000, message)
+  else
+    log_line = string.format("%s\n", message)
+  end
+
 
   -- Write and flush
   self._file:write(log_line)
   self._file:flush()
+end
+
+--- Logs an non-categorized message.
+---@param fmt string # Message format string
+---@param ... any # Values to insert into format string
+function M:log(fmt, ...)
+  self:entry(nil, fmt, ...)
+end
+
+--- Logs an system message.
+---@param fmt string # Message format string
+---@param ... any # Values to insert into format string
+function M:system(fmt, ...)
+  self:entry("SYSTEM", fmt, ...)
 end
 
 --- Logs a debug message.
@@ -75,11 +95,16 @@ function M:error(fmt, ...)
   self:entry("ERROR", fmt, ...)
 end
 
+--- Logs an fatal error message.
+---@param fmt string # Message format string
+---@param ... any # Values to insert into format string
+function M:fatal(fmt, ...)
+  self:entry("FATAL", fmt, ...)
+end
+
 --- Closes the log file.
 function M:close()
   if self._file then
-    self:info("Shutdowning Moonly`s logger.")
-
     self._file:close()
     self._file = nil
   end

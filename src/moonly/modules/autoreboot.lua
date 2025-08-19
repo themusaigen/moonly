@@ -65,9 +65,9 @@ local logger     = require("moonly.logger")
 local path       = require("moonly.path")
 
 --- Initializes the autoreboot module with options.
----@param options table # Options like `delay`
-function autoreboot:initialize(options)
-  self.delay = options and options.delay or self.delay
+---@param configuration table # Options like `delay`
+function autoreboot:initialize(configuration)
+  self.delay = configuration and configuration["moonly.autoreboot.delay"] or self.delay
 end
 
 --- Scans a directory for .lua files and tracks their modification times.
@@ -129,12 +129,12 @@ function autoreboot:tick()
           file.modify_time = current_time
         end
       else
-        logger:warn("Failed to read modification time for file: %s", file.path)
+        logger:error("Failed to read modification time for file: %s", file.path)
       end
     end
 
     if needs_reload then
-      logger:info("Detected changes in project '%s'. Rebooting...", name)
+      logger:info("Autoreboot detected changes in project '%s'. Rebooting...", name)
 
       bootstrap:reboot_project(entry.project)
 

@@ -24,22 +24,22 @@ end
 ---@return table # List of module definitions or empty table if none
 function M:configuration_modules()
   if not self._configuration then
-    logger:debug("Configuration is not yet loaded.")
+    logger:error("Configuration is not yet loaded.")
     return {}
   end
 
-  return self._configuration.modules or {}
+  return self._configuration["moonly.runtime.modules"] or {}
 end
 
 --- Returns the runtime paths defined in the configuration.
 ---@return table # List of paths or empty table if none
 function M:configuration_runtime_path()
   if not self._configuration then
-    logger:debug("Configuration is not yet loaded.")
+    logger:error("Configuration is not yet loaded.")
     return {}
   end
 
-  return self._configuration.runtime and self._configuration.runtime.path or {}
+  return self._configuration and self._configuration["moonly.runtime.path"] or {}
 end
 
 --- Finds a project by its associated script.
