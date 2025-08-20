@@ -127,11 +127,6 @@ function M:on_draw()
 
   clipper:End()
 
-  -- Autoscroll if already at the bottom.
-  if imgui.GetScrollY() >= imgui.GetScrollMaxY() then
-    imgui.SetScrollHereY(1)
-  end
-
   imgui.EndChild()
 
   if imgui.BeginPopupContextWindow("moonly.console.context-window") then
