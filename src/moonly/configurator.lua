@@ -22,6 +22,13 @@ function M:get_default_configuration()
       "autoreboot"
     },
     ["moonly.autoreboot.delay"] = 1000,
+    ["moonly.console.enable"] = false,
+    ["moonly.console.key"] = "`",
+    ["moonly.console.singleplayer.auto-enable"] = true,
+    ["moonly.console.window.x"] = 0,
+    ["moonly.console.window.y"] = 0,
+    ["moonly.console.window.width"] = 400,
+    ["moonly.console.window.height"] = 300
   }
 end
 
