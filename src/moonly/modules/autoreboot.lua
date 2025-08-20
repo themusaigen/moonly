@@ -54,26 +54,37 @@ local function get_file_modify_time(path)
   return nil
 end
 
+---@class Moonly.Autoreboot.File
+---@field path string
+---@field modify_time { low: number, high: number }
+
+---@class Moonly.Autoreboot.Record
+---@field project Moonly.Project
+---@field files Moonly.Autoreboot.File[]
+
 --- Autoreboot module definition
-local autoreboot = {
+---@class Moonly.Autoreboot: Moonly.Module
+---@field projects table<string, Moonly.Autoreboot.Record>
+---@field delay number
+local M         = {
   projects = {}, -- Maps project -> list of tracked files with modification times
   delay = 1000,  -- Default tick interval in milliseconds
 }
 
-local bootstrap  = require("moonly.bootstrap")
-local logger     = require("moonly.logger")
-local path       = require("moonly.path")
+local bootstrap = require("moonly.bootstrap")
+local logger    = require("moonly.logger")
+local path      = require("moonly.path")
 
 --- Initializes the autoreboot module with options.
----@param configuration table # Options like `delay`
-function autoreboot:initialize(configuration)
+---@param configuration Moonly.Configuration # Options like `delay`
+function M:initialize(configuration)
   self.delay = configuration and configuration["moonly.autoreboot.delay"] or self.delay
 end
 
 --- Scans a directory for .lua files and tracks their modification times.
----@param project table # Project object
+---@param project string # Project object
 ---@param dir string # Directory to scan
-function autoreboot:update_info_about_directory_files(project, dir)
+function M:update_info_about_directory_files(project, dir)
   path.traverse(dir, function(base_path, entry, isdirectory)
     if isdirectory then
       return
@@ -100,22 +111,16 @@ function autoreboot:update_info_about_directory_files(project, dir)
 end
 
 --- Registers a project with this autoreboot module.
----@param project table # Project object
-function autoreboot:register(project)
+---@param project Moonly.Project # Project object
+function M:register(project)
   self.projects[project:name()] = { project = project, files = {} }
 
   self:update_info_about_directory_files(project:name(), project:source_directory())
   self:update_info_about_directory_files(project:name(), project:libraries_directory())
 end
 
---- Unregisters a project from being tracked.
----@param project table # Project object
-function autoreboot:unregister(project)
-  -- self.projects[project] = nil
-end
-
 --- Main tick function that checks for file changes and reboots project if needed.
-function autoreboot:tick()
+function M:tick()
   wait(self.delay)
 
   for name, entry in pairs(self.projects) do
@@ -145,4 +150,4 @@ function autoreboot:tick()
   end
 end
 
-return autoreboot
+return M

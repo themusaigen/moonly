@@ -8,7 +8,7 @@ local scriptgenerator = require("moonly.scriptgenerator")
 local action_type     = require("moonly.bootstrap.action_type")
 
 --- Loads a project by generating and running its temporary script.
----@param project table # Project object
+---@param project Moonly.Project # Project object
 function M:load_project(project)
   if not project then
     logger:error("Attempted to load invalid project")
@@ -29,6 +29,7 @@ function M:load_project(project)
   end
 
   -- Load project.
+  ---@diagnostic disable-next-line: invisible, assign-type-mismatch
   project._script = script.load(scriptfile)
 
   -- Log :)
@@ -39,7 +40,7 @@ function M:load_project(project)
 end
 
 --- Unloads a project's script and waits for it to terminate.
----@param project table # Project object
+---@param project Moonly.Project # Project object
 function M:unload_project(project)
   if not project then
     logger:error("Attempted to unload invalid project")
@@ -56,7 +57,7 @@ function M:unload_project(project)
 end
 
 --- Reboots a project by unloading and reloading it.
----@param project table # Project object
+---@param project Moonly.Project # Project object
 function M:reboot_project(project)
   if not project then
     logger:error("Attempted to reboot invalid project")

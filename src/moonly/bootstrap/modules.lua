@@ -1,9 +1,17 @@
+---@class Moonly.Module
+---@field initialize fun(self: Moonly.Module, config: table<string, any>)?
+---@field register fun(self: Moonly.Module, project: Moonly.Project)?
+---@field unregister fun(self: Moonly.Module, project: Moonly.Project)?
+---@field tick fun(self: Moonly.Module)?
+---@field unload fun(self: Moonly.Module)?
+---@field save fun(self: Moonly.Module, config: table<string, any>)?
+
 local M = {}
 
 local logger = require("moonly.logger")
 
 --- Initializes core and user-defined modules.
-function M._initialize_modules(self)
+function M:_initialize_modules()
   logger:system("Initializing modules...")
 
   for _, modname in ipairs(self:configuration_modules()) do
@@ -31,6 +39,8 @@ function M:load_module(modname)
     end
   end
 
+  ---@cast module Moonly.Module
+
   -- Call initialize callback if exists.
   if module.initialize then
     module:initialize(self._configuration)
@@ -44,7 +54,7 @@ function M:load_module(modname)
 end
 
 --- Creates background threads for modules that have a tick function.
-function M._initialize_module_threads(self)
+function M:_initialize_module_threads()
   logger:system("Initializing module threads...")
 
   for _, module in ipairs(self:modules()) do

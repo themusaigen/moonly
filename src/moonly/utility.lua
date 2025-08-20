@@ -2,9 +2,9 @@
 -- Purpose: Provide common file and JSON handling utilities.
 -- Author: Musaigen
 
-local dkjson = require("dkjson")
-
 local M = {}
+
+local dkjson = require("dkjson")
 
 --- Writes a Lua table to a JSON file with pretty-print formatting.
 ---@param path string # Full path to the output file

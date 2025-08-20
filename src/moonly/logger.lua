@@ -8,6 +8,7 @@ local M = {
 
 local path = require("moonly.path")
 
+
 --- Internal function to write a log entry to the file.
 ---@param level string? # Log level (DEBUG/INFO/WARN/ERROR)
 ---@param fmt string # Format string
@@ -47,6 +48,10 @@ function M:entry(level, fmt, ...)
     log_line = string.format("%s\n", message)
   end
 
+  local console = require("moonly.modules.console")
+  if console.save_message then
+    console:save_message(level, message)
+  end
 
   -- Write and flush
   self._file:write(log_line)

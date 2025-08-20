@@ -3,25 +3,25 @@ local M = {}
 local logger = require("moonly.logger")
 
 --- Returns the list of all loaded modules.
----@return table
+---@return Moonly.Module[]
 function M:modules()
   return self._modules
 end
 
 --- Returns the current configuration.
----@return table
+---@return Moonly.Configuration
 function M:configuration()
   return self._configuration
 end
 
 --- Returns the list of all loaded projects.
----@return table
+---@return Moonly.Project[]
 function M:projects()
   return self._projects
 end
 
 --- Returns the list of modules defined in the configuration.
----@return table # List of module definitions or empty table if none
+---@return string[] # List of module definitions or empty table if none
 function M:configuration_modules()
   if not self._configuration then
     logger:error("Configuration is not yet loaded.")
@@ -32,7 +32,7 @@ function M:configuration_modules()
 end
 
 --- Returns the runtime paths defined in the configuration.
----@return table # List of paths or empty table if none
+---@return string[] # List of paths or empty table if none
 function M:configuration_runtime_path()
   if not self._configuration then
     logger:error("Configuration is not yet loaded.")
@@ -43,8 +43,8 @@ function M:configuration_runtime_path()
 end
 
 --- Finds a project by its associated script.
----@param scr table # Script object
----@return table|nil # Matching project or nil
+---@param scr LuaScript # Script object
+---@return Moonly.Project? # Matching project or nil
 function M:find_project_by_script(scr)
   for _, project in ipairs(self:projects()) do
     if project:script() == scr then

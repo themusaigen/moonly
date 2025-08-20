@@ -1,5 +1,3 @@
-local logger = require("moonly.logger")
-
 --- Concatenates multiple strings into a single string.
 --- This is a wrapper around table.concat for convenience.
 ---@param ... string # One or more strings to concatenate

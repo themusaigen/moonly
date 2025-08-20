@@ -7,10 +7,9 @@ local M = {}
 -- Require external modules
 require("moonly.string")
 local path = require("moonly.path")
-local logger = require("moonly.logger")
 
 --- Generates the source code template for a temporary Moonloader script.
----@param project table # Project object with metadata and paths
+---@param project Moonly.Project # Project object with metadata and paths
 ---@return string # Generated Lua script content
 function M:generate_source_code(project)
   local init_path = project:init_script_path():gsub("\\", "\\\\") -- Escape backslashes
@@ -108,7 +107,7 @@ script()
 end
 
 --- Generates a temporary script file and returns its path.
----@param project table # Project object with metadata and paths
+---@param project Moonly.Project # Project object with metadata and paths
 ---@return string|nil # Path to the generated script file, or nil on failure
 function M:generate_scriptfile(project)
   -- Format temporary file path

@@ -2,6 +2,15 @@
 -- Purpose: Represents a project with configuration and directory structure.
 -- Author: Musaigen
 
+---@class Moonly.Project
+---@field private _name string
+---@field private _source_dirname string
+---@field private _libraries_dirname string
+---@field private _root_directory string
+---@field private _source_dir string
+---@field private _libraries_dir string
+---@field private _init_path string
+---@field private _script LuaScript
 local M       = {}
 
 local path    = require("moonly.path")
@@ -9,7 +18,7 @@ local utility = require("moonly.utility")
 
 --- Creates a new Project instance based on a directory containing a 'project.json'.
 --- @param directory string # Path to the project root directory
---- @return table|nil # New project object or nil if loading failed
+--- @return Moonly.Project? # New project object or nil if loading failed
 function M.new(directory)
   local project_file_path = path.concat(directory, "project.json")
   local project_config = utility.read_json(project_file_path)
@@ -86,7 +95,7 @@ function M:init_script_path()
 end
 
 --- Returns the associated script object if it was assigned.
----@return table|nil
+---@return LuaScript?
 function M:script()
   return self._script
 end

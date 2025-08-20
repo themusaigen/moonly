@@ -8,9 +8,11 @@ local path    = require("moonly.path")
 local utility = require("moonly.utility")
 local logger  = require("moonly.logger")
 
+---@alias Moonly.Configuration table<string, any>
+
 --- Returns a default configuration structure.
 ---This is used if no configuration file exists.
----@return table # A default configuration table
+---@return Moonly.Configuration # A default configuration table
 function M:get_default_configuration()
   return {
     ["moonly.runtime.path"] = {
@@ -30,7 +32,7 @@ function M:get_configuration_file_path()
 end
 
 --- Loads the configuration from disk, or creates a new one if it doesn't exist.
----@return table|nil # Loaded configuration table or nil on error
+---@return Moonly.Configuration? # Loaded configuration table or nil on error
 function M:load()
   local config_path = self:get_configuration_file_path()
 
