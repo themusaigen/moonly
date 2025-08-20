@@ -19,7 +19,8 @@ function M:get_default_configuration()
       path.concat(getGameDirectory(), "moonly")
     },
     ["moonly.runtime.modules"] = {
-      "autoreboot"
+      "autoreboot",
+      "console"
     },
     ["moonly.autoreboot.delay"] = 1000,
     ["moonly.console.enable"] = false,
