@@ -15,17 +15,17 @@ function M:tick()
     local project = action.project
 
     if not project or not project._script then
-      logger:warn("Skipping invalid project in action queue")
+      logger:warn("Skipping invalid project in action queue.")
       table.remove(self._pending_projects_actions, i)
       goto continue
     end
 
     if project._script.dead then
       if action.type == action_type.UNLOAD then
-        logger:system("Unloading project '%s'", project:name())
+        logger:system("Unloading project '%s'...", project:name())
         project._script = nil
       else
-        logger:system("Rebooting project '%s'", project:name())
+        logger:system("Rebooting project '%s'...", project:name())
         self:load_project(project)
       end
 

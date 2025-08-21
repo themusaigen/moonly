@@ -38,7 +38,7 @@ function M:log(message, tag, color, sender, prefix)
   if sender then
     str = str .. string.format("{%06X}%s: ", constants.COLOR_SENDER, sender.name)
   end
-  self.console:add_message("%s{%06X}%s", str, constants.COLOR_MSG, message)
+  self.console.messages:add("%s{%06X}%s", str, constants.COLOR_MSG, message)
 end
 
 function M:on_system_message(message, type, sender)

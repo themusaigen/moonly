@@ -6,16 +6,30 @@ local M = {}
 
 local lfs = require("lfs")
 
+-- Cache moonly's TEMP directory to prevent unnecessary deleting.
+local moonly_temp_directory = nil
+
 --- Returns the default temporary directory used by Moonly.
 --- Creates it if it doesn't exist.
 ---@return string # Path to the Moonly temporary directory
 function M.get_moonly_temp_directory()
-  local moonly_temp_dir = M.concat(os.getenv("TEMP"), "moonly")
+  if moonly_temp_directory then
+    return moonly_temp_directory
+  end
 
+  local moonly_temp_dir = M.concat(os.getenv("TEMP"), "moonly")
   if not doesDirectoryExist(moonly_temp_dir) then
+    createDirectory(moonly_temp_dir)
+  else
+    -- Recursively remove temp directory with all temp scripts into.
+    os.execute(("rd /s/q \"%s\""):format(moonly_temp_dir))
+
+    -- Create empty directory.
     createDirectory(moonly_temp_dir)
   end
 
+  -- Cache.
+  moonly_temp_directory = moonly_temp_dir
   return moonly_temp_dir
 end
 

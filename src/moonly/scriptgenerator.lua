@@ -115,6 +115,11 @@ function M:generate_scriptfile(project)
   local filename = string.concat(project:name(), ".lua")
   local scriptpath = path.concat(temp_dir, filename)
 
+  -- Temporary script already exists, return his path.
+  if doesFileExist(scriptpath) then
+    return scriptpath
+  end
+
   -- Open file for writing
   local file = io.open(scriptpath, "w+")
   if not file then

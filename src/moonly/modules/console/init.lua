@@ -54,23 +54,15 @@ function M:initialize(config)
   self._keyhandler:initialize(self)
 
   -- Add saved messages from moonly's logger.
-  for _, msg in ipairs(self.saved) do
-    local level = msg.level
-    local message = msg.message
-    if level then
-      local type = tags.get_tag_type(level)
-      local prefix = tags.get_tag_prefix(type)
-      local color = tags.get_tag_color(type)
-      self._logger:log(message, prefix, color, nil, "MLY")
-    else
-      self._logger:log(message)
-    end
+  for _, entry in ipairs(self.saved) do
+    self:log_message(entry.level, entry.message)
   end
 
   -- Clear saved messages.
   self.saved = {}
 end
 
+--- Fires when `moonly.console.key` or Escape is pressed.
 ---@param escape boolean
 function M:on_key_press(escape)
   if isSampLoaded() and isSampAvailable() and sampIsCursorActive() then
@@ -92,19 +84,34 @@ function M:on_key_press(escape)
   consumeWindowMessage(true, true)
 end
 
---- Adds new internally non-edited message.
+--- Fires when moonly logs something.
+---@param level string?
+---@param message string
+function M:on_moonly_log(level, message)
+  if self.enabled then
+    self:log_message(level, message)
+  else
+    self.saved[#self.saved + 1] = { level = level, message = message }
+  end
+end
+
+--- Log the message.
+---@param level string?
 ---@param message string
 ---@param ... any
-function M:add_message(message, ...)
+function M:log_message(level, message, ...)
   if select("#", ...) > 0 then
     message = message:format(...)
   end
 
-  self.messages:add(message)
-end
-
-function M:save_message(level, message)
-  self.saved[#self.saved + 1] = { level = level, message = message }
+  if level then
+    local type = tags.get_tag_type(level)
+    local prefix = tags.get_tag_prefix(type)
+    local color = tags.get_tag_color(type)
+    self._logger:log(message, prefix, color, nil, "MLY")
+  else
+    self._logger:log(message)
+  end
 end
 
 function M:save(config)

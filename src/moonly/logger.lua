@@ -48,9 +48,10 @@ function M:entry(level, fmt, ...)
     log_line = string.format("%s\n", message)
   end
 
+  -- Fire console event.
   local console = require("moonly.modules.console")
-  if console.save_message then
-    console:save_message(level, message)
+  if console.on_moonly_log then
+    console:on_moonly_log(level, message)
   end
 
   -- Write and flush
