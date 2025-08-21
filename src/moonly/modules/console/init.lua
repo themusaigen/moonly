@@ -65,7 +65,7 @@ end
 --- Fires when `moonly.console.key` or Escape is pressed.
 ---@param escape boolean
 function M:on_key_press(escape)
-  if isSampLoaded() and isSampAvailable() and sampIsCursorActive() then
+  if isSampLoaded() and isSampAvailable() and sampIsChatInputActive() then
     return
   end
 

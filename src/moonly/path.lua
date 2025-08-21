@@ -21,16 +21,25 @@ function M.get_moonly_temp_directory()
   if not doesDirectoryExist(moonly_temp_dir) then
     createDirectory(moonly_temp_dir)
   else
-    -- Recursively remove temp directory with all temp scripts into.
-    os.execute(("rd /s/q \"%s\""):format(moonly_temp_dir))
+    local filemarker_path = M.concat(moonly_temp_dir, "moonly.nodelete")
+    if not doesFileExist(filemarker_path) then
+      -- Recursively remove temp directory with all temp scripts into.
+      M.remove_directory_recursively(moonly_temp_dir)
 
-    -- Create empty directory.
-    createDirectory(moonly_temp_dir)
+      -- Create empty directory.
+      createDirectory(moonly_temp_dir)
+    else
+      os.remove(filemarker_path)
+    end
   end
 
   -- Cache.
   moonly_temp_directory = moonly_temp_dir
   return moonly_temp_dir
+end
+
+function M.remove_directory_recursively(path)
+  os.execute(("rd /s/q \"%s\""):format(path))
 end
 
 --- Traverses a directory recursively or non-recursively, applying a callback to each entry.

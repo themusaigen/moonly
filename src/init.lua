@@ -1,6 +1,6 @@
 script_name("moonly")
-script_version("1.4.3")
-script_version_number(1.403)
+script_version("1.4.4")
+script_version_number(1.404)
 script_author("Musaigen")
 
 -- Load required modules
@@ -14,7 +14,7 @@ local is_unloading = false
 logger:system("Session started.\n")
 
 logger:log("Moonly v%s loaded.", script.this.version)
-logger:log("Maintaners: Musaigen (https://github.com/themusaigen)")
+logger:log("Maintainers: Musaigen (https://github.com/themusaigen)")
 logger:log("GitHub: https://github.com/themusaigen/moonly")
 logger:log("BlastHack: https://www.blast.hk/threads/220380\n")
 
@@ -40,11 +40,14 @@ function main()
   end
 end
 
-local function unload(quit)
+--- Unloads moonly.
+---@param died boolean # Is script dead?
+---@param quit boolean # Is we quitting game?
+local function unload(died, quit)
   if not is_unloading then
     is_unloading = true
     logger:system("Unloading...")
-    bootstrap:unload(quit)
+    bootstrap:unload(died, quit)
     logger:system("Session terminated.")
     logger:close()
   end
@@ -53,7 +56,7 @@ end
 --- Event handler for when a script terminates
 addEventHandler("onScriptTerminate", function(scr, quit)
   if scr == script.this then
-    unload(true)
+    unload(true, quit)
   else
     -- Check if the terminated script belongs to a registered project
     local project = bootstrap:find_project_by_script(scr)
@@ -64,5 +67,5 @@ addEventHandler("onScriptTerminate", function(scr, quit)
 end)
 
 addEventHandler("onQuitGame", function()
-  unload(false)
+  unload(false, true)
 end)

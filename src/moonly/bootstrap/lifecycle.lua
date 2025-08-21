@@ -12,6 +12,7 @@ local M = {
 local logger = require("moonly.logger")
 local utility = require("moonly.utility")
 local configurator = require("moonly.configurator")
+local path = require("moonly.path")
 
 --- Initializes the system with the provided configuration.
 ---@param configuration Moonly.Configuration # Configuration loaded from moonly.json
@@ -24,8 +25,9 @@ function M:initialize(configuration)
 end
 
 --- Unloads all projects and emits an unload event.
----@param unload boolean # Unload existing projects or not.
-function M:unload(unload)
+---@param died boolean # Is our script died due to some errors or not.
+---@param quit boolean # Is we quitting game?
+function M:unload(died, quit)
   -- Unregister all projects
   for _, project in ipairs(self:projects()) do
     ---@cast project Moonly.Project
@@ -33,7 +35,7 @@ function M:unload(unload)
     self:emit("unregister", project)
 
     -- Unload the project.
-    if unload then
+    if died then
       local script = project:script()
       if script and not script.dead then
         script:unload()
@@ -41,6 +43,13 @@ function M:unload(unload)
         logger:system("%s: Project terminated.", project:name())
       end
     end
+  end
+
+  -- In case where our script is died, but not because we are leaving the game...
+  -- ...to prevent reloading projects from ML-Autoreboot when moonly.lua will be reloaded by a user...
+  -- ...we create file-marker that tells moonly to not delete the %TEMP%/moonly directory.
+  if died and not quit then
+    io.open(path.concat(path.get_moonly_temp_directory(), "moonly.nodelete"), "w+"):close()
   end
 
   -- Emit save configuration event.
