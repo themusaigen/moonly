@@ -38,6 +38,8 @@ function M.get_moonly_temp_directory()
   return moonly_temp_dir
 end
 
+--- Removes directory with all files into recursively.
+---@param path string
 function M.remove_directory_recursively(path)
   os.execute(("rd /s/q \"%s\""):format(path))
 end

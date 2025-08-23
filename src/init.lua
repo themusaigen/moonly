@@ -1,6 +1,6 @@
 script_name("moonly")
-script_version("1.4.4")
-script_version_number(1.404)
+script_version("1.4.5")
+script_version_number(1.405)
 script_author("Musaigen")
 
 -- Load required modules

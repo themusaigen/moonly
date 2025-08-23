@@ -8,6 +8,11 @@ local M = {
 
 local path = require("moonly.path")
 
+--- Cache console.
+local console = {
+  try = true, -- Try to load console.
+  handle = nil
+}
 
 --- Internal function to write a log entry to the file.
 ---@param level string? # Log level (DEBUG/INFO/WARN/ERROR)
@@ -49,9 +54,19 @@ function M:entry(level, fmt, ...)
   end
 
   -- Fire console event.
-  local console = require("moonly.modules.console")
-  if console.on_moonly_log then
-    console:on_moonly_log(level, message)
+
+  -- To avoid multiple slow pcall calls, cache console handle.
+  if not console.handle and console.try then
+    local success, handle = pcall(require, "moonly.modules.console")
+    if success then
+      console.handle = handle
+    else
+      console.try = false
+    end
+  end
+
+  if console.handle and console.handle.on_moonly_log then
+    console.handle:on_moonly_log(level, message)
   end
 
   -- Write and flush
