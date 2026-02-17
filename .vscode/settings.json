@@ -1,20 +1,33 @@
 {
-  "[lua]": {
-    "editor.defaultFormatter": "sumneko.lua",
-  },
-  "files.encoding": "windows1251",
-  "Lua.runtime.version": "LuaJIT",
+  "Lua.diagnostics.globals": [
+    "main",
+    "onExitScript",
+    "onQuitGame",
+    "onScriptLoad",
+    "onScriptTerminate",
+    "onScriptMessage",
+    "onSystemMessage",
+    "onReceivePacket",
+    "onReceiveRpc",
+    "onSendPacket",
+    "onSendRpc",
+    "onWindowMessage",
+    "onStartNewGame",
+    "onLoadGame",
+    "onSaveGame"
+  ],
   "Lua.runtime.path": [
     "src/?.lua",
     "src/?/init.lua",
     "lib/?.lua",
     "lib/?/init.lua"
   ],
-  "Lua.diagnostics.globals": [
-    "main"
-  ],
+  "Lua.runtime.version": "LuaJIT",
   "Lua.workspace.library": [
     "${addons}/moonloader/module/library"
   ],
-  "Lua.workspace.checkThirdParty": false,
+  "[lua]": {
+    "editor.defaultFormatter": "sumneko.lua",
+    "files.encoding": "windows1251"
+  }
 }

@@ -1,12 +1,16 @@
 {
-  "name": "moonly",
-  "library": "lib",
-  "source": "src",
   "distribute": {
-    "output": "dist",
-    "additionalDirs": [
-      "lib"
+    "constants": {
+      "MOONLY_BUNDLED": true,
+      "MOONLY_BUNDLE_TIMESTAMP": "<$date>"
+    },
+    "exclude": [],
+    "include": [
+      "lib/*"
     ],
-    "ignoredDirs": []
-  }
+    "output": "dist"
+  },
+  "library": "lib",
+  "name": "moonly",
+  "source": "src"
 }

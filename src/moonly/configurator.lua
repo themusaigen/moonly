@@ -29,7 +29,9 @@ function M:get_default_configuration()
     ["moonly.console.window.x"] = 0,
     ["moonly.console.window.y"] = 0,
     ["moonly.console.window.width"] = 400,
-    ["moonly.console.window.height"] = 300
+    ["moonly.console.window.height"] = 300,
+    ["moonly.qol.antipause"] = true,
+    ["moonly.qol.window-mode"] = false
   }
 end
 
