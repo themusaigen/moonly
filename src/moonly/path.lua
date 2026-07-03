@@ -24,10 +24,7 @@ function M.get_moonly_temp_directory()
     local filemarker_path = M.concat(moonly_temp_dir, "moonly.nodelete")
     if not doesFileExist(filemarker_path) then
       -- Recursively remove temp directory with all temp scripts into.
-      M.remove_directory_recursively(moonly_temp_dir)
-
-      -- Create empty directory.
-      createDirectory(moonly_temp_dir)
+      M.remove_all_files(moonly_temp_dir, true)
     else
       os.remove(filemarker_path)
     end
@@ -40,13 +37,18 @@ end
 
 --- Removes directory with all files into recursively.
 ---@param path string
-function M.remove_directory_recursively(path)
-  os.execute(("rd /s/q \"%s\""):format(path))
+function M.remove_all_files(path, recursive)
+  M.traverse(path, function(base_path, entry, is_directory)
+    if not is_directory then
+      local full_path = M.concat(base_path, entry)
+      os.remove(full_path)
+    end
+  end, recursive)
 end
 
 --- Traverses a directory recursively or non-recursively, applying a callback to each entry.
 ---@param dir string # Directory to traverse
----@param callback fun(base_path: string, entry: string, isdirectory: boolean) # Function to call on each entry
+---@param callback fun(base_path: string, entry: string, is_directory: boolean) # Function to call on each entry
 ---@param recursive boolean|nil # Whether to recurse into subdirectories
 function M.traverse(dir, callback, recursive)
   if type(callback) ~= "function" then
